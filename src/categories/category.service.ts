@@ -18,23 +18,23 @@ export class CategoryService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  private async generateUniqueSlug(name: string, existingId?: string): Promise<string> {
-    const baseSlug = generateBaseSlug(name);
-    let uniqueSlug = baseSlug;
-    let counter = 1;
+private async generateUniqueSlug(name: string, existingId?: string): Promise<string>{
+  const baseSlug = generateBaseSlug(name);
+  let uniqueSlug = baseSlug;
+  let counter = 1;
+  
+  while(true){
+    const foundCatergory = await this.categoryRepository.findOne({
+      where: {slug: uniqueSlug}
+    });
 
-    while (true) {
-      const foundCategory = await this.categoryRepository.findOne({
-        where: { slug: uniqueSlug },
-      });
-
-      if (!foundCategory || (existingId && foundCategory.id === existingId)) {
-        return uniqueSlug;
-      }
-      uniqueSlug = `${baseSlug}-${counter}`;
-      counter++;
+  if(!foundCatergory || (existingId && foundCatergory.id === existingId)){
+      return uniqueSlug;
     }
+    uniqueSlug = `${uniqueSlug}-${counter}`
+    counter++ 
   }
+}
 
   async createCategory(
     createCategoryDto: CreateCategoryDto,
