@@ -19,20 +19,20 @@ export class CategoryService {
 
   private async generateUniqueSlug(
     name: string,
-    existingId: string,
+    existingId?: string,
   ): Promise<string> {
     const baseSlug = generateBaseSlug(name);
     let uniqueSlug = baseSlug;
     let counter = 1;
 
     while (true) {
-      const existingCatergory = await this.categoryRepository.findOne({
-        where: { slug: uniqueSlug },
+      const existingCategory = await this.categoryRepository.findOne({
+        where: { name },
       });
 
       if (
-        !existingCatergory ||
-        (existingId && existingCatergory.id === existingId)
+        !existingCategory ||
+        (existingCategory && existingId === existingCategory.id)
       ) {
         return uniqueSlug;
       }
@@ -42,59 +42,76 @@ export class CategoryService {
   }
 
   async createCategory(
+    id: string,
     createCategoryDto: CreateCategoryDto,
   ): Promise<Category> {
     const { name, description } = createCategoryDto;
-
-    const existingCategory = await this.categoryRepository.findOne({
-      where: { slug: name },
+    const existingCategoryByName = await this.categoryRepository.findOne({
+      where: { name: name },
     });
-    if (existingCategory) {
-      throw new ConflictException(`category with name ${name} already exists`);
+
+    if (existingCategoryByName) {
+      throw new ConflictException(
+        `Category with name "${name}" already exists`,
+      );
     }
-    const uniqueCategory = generateBaseSlug(createCategoryDto.name);
+
+    const uniqueSlug = await this.generateUniqueSlug(name);
     const newCategory = this.categoryRepository.create({
       name: name,
-      slug: uniqueCategory,
+      slug: uniqueSlug,
       description: description,
     });
-
     return await this.categoryRepository.save(newCategory);
   }
 
-  async updateCategory(updateCategoryDto: UpdateCategoryDto, id: string) {
-    const category = await this.categoryRepository.findOne({ where: { id } });
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
+    const existingCategory = await this.categoryRepository.findOne({
+      where: { id },
+    });
 
-    if (!category) {
-      throw new NotFoundException(`Category with id "${id} does not exists"`);
+    if (!existingCategory) {
+      throw new NotFoundException(`Category with "${id}" do not exists`);
     }
 
-    if (updateCategoryDto.name && updateCategoryDto.name !== category.name) {
-      const uniqueSlug = await this.generateUniqueSlug(
+    if (
+      updateCategoryDto.name &&
+      updateCategoryDto.name !== existingCategory.name
+    ) {
+      const nameConflict = await this.categoryRepository.findOne({
+        where: { name: updateCategoryDto.name },
+      });
+      if (nameConflict && nameConflict.id !== id) {
+        throw new ConflictException(
+          `Category with name "${updateCategoryDto.name}" already exists`,
+        );
+      }
+      existingCategory.name = updateCategoryDto.name;
+      existingCategory.slug = await this.generateUniqueSlug(
         updateCategoryDto.name,
         id,
       );
-      category.name = updateCategoryDto.name;
-      category.slug = uniqueSlug;
     }
-
     if (updateCategoryDto.description !== undefined) {
-      category.description = updateCategoryDto.description;
+      existingCategory.description = updateCategoryDto.description;
     }
-    return this.categoryRepository.save(category);
+    return await this.categoryRepository.save(existingCategory);
   }
 
-  async findAllCategory(): Promise<Category[]> {
+  async findAll() {
     return await this.categoryRepository.find();
   }
 
-  async softDeleteCategory(id: string): Promise<void> {
-    const categoryToDelete = await this.categoryRepository.findOne({
+  async softRemove(id: string): Promise<void> {
+    const existingCategory = await this.categoryRepository.findOne({
       where: { id },
     });
-    if (!categoryToDelete) {
-      throw new NotFoundException(`Category with ${id} does not exists`);
+    if (!existingCategory) {
+      throw new NotFoundException(`Category with ID "${id}" doesn't exists.`);
     }
-    await this.categoryRepository.softRemove(categoryToDelete);
+    await this.categoryRepository.softRemove(existingCategory);
   }
 }
