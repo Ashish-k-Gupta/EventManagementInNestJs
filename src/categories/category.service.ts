@@ -42,7 +42,6 @@ export class CategoryService {
   }
 
   async createCategory(
-    id: string,
     createCategoryDto: CreateCategoryDto,
   ): Promise<Category> {
     const { name, description } = createCategoryDto;
@@ -99,6 +98,10 @@ export class CategoryService {
       existingCategory.description = updateCategoryDto.description;
     }
     return await this.categoryRepository.save(existingCategory);
+  }
+
+  async findCategoryBySlug(slug: string): Promise<Category | null> {
+    return await this.categoryRepository.findOne({ where: { slug: slug } });
   }
 
   async findAll() {

@@ -25,7 +25,7 @@ export class CategoryController {
 
   @Get()
   async findAll() {
-    return this.categoryService.findAllCategories();
+    return this.categoryService.findAll();
   }
 
   @Get(":slug")
@@ -44,6 +44,6 @@ export class CategoryController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param("id") id: string) {
-    await this.categoryService.deleteCategory(id);
+    await this.categoryService.softRemove(id);
   }
 }
