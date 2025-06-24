@@ -1,24 +1,20 @@
 import {
+  IsBoolean,
   IsEmail,
-  IsEmpty,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
-  MaxLength,
-  MinLength,
 } from "class-validator";
 import { UserRoles } from "src/common/enums/userRole.enum";
 
-export class CreateUserDto {
+export class RegisterUserDto {
   @IsString()
-  @IsOptional()
-  @IsEmpty()
+  @IsNotEmpty()
   firstName: string;
 
   @IsString()
-  @IsOptional()
-  @IsEmpty()
+  @IsNotEmpty()
   lastName: string;
 
   @IsEmail()
@@ -27,11 +23,21 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(20, { message: "Password can't exceed 20 character" })
-  @MinLength(8, { message: "Password must be atleast8 character" })
   password: string;
 
-  @IsEnum(UserRoles)
+  @IsEnum({
+    type: "enum",
+    enum: UserRoles,
+    default: UserRoles.ATTENDEE,
+  })
   @IsNotEmpty()
   role: UserRoles;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isAdmin: boolean;
 }

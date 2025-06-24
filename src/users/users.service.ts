@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -8,6 +9,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UsersService {
@@ -18,31 +20,44 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
+      where: { email: createUserDto.email.toLowerCase() },
     });
     if (existingUser) {
       throw new ConflictException("Email already taken");
     }
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(createUserDto.password, salt);
     const user = this.userRepository.create({
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       email: createUserDto.email.toLowerCase(),
+      password: hashPassword,
       role: createUserDto.role,
     });
-    user.setPassword(createUserDto.password);
     return this.userRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
-  }
-  async findOndByEmail(email: string) {
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
+    return this.userRepository.find({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
     });
-    if (existingUser) {
-      throw new ConflictException("Email already taken");
+  }
+
+  async findOneByEmail(email: string) {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: email.toLowerCase() },
+    });
+    if (!existingUser) {
+      throw new NotFoundException("Email does not exist");
     }
+    return existingUser;
   }
 
   async findOneById(id: string): Promise<User | null> {
@@ -61,7 +76,8 @@ export class UsersService {
     if (!user) {
       throw new UnauthorizedException("User does not exists or invalid token");
     }
-    return this.userRepository.save(updateUserDto);
+    Object.assign(user, updateUserDto);
+    return this.userRepository.save(user);
   }
 
   async remove(id: string) {

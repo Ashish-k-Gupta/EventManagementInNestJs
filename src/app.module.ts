@@ -7,6 +7,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./users/entities/user.entity";
 import { BaseEntity } from "typeorm";
 import { Event } from "./common/entities/event.entity";
+import { Category } from "./categories/entities/category.entity";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,7 +24,7 @@ import { Event } from "./common/entities/event.entity";
         password: configService.get<string>("DB_PASSWORD"),
         database: configService.get<string>("DB_NAME"),
         // entities: [__dirname + "/../**/*.entity.{js,ts}"],
-        entities: [User, BaseEntity, Event],
+        entities: [User, BaseEntity, Event, Category],
         autoLoadEntities: true,
         synchronize: true,
         logging: true,
