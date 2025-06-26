@@ -72,12 +72,29 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<User | undefined> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "isActive",
+        "isAdmin",
+      ],
+    });
     if (!user) {
       throw new UnauthorizedException("User does not exists or invalid token");
     }
-    Object.assign(user, updateUserDto);
-    return this.userRepository.save(user);
+    const update = Object.fromEntries(
+      Object.entries(updateUserDto).filter(([, value]) => value !== undefined),
+    );
+    Object.assign(user, update);
+    console.log("Userrrrrrrrrrrrrrrrrrr", user);
+    console.log("mustrrrrrrrrrrrrrr", updateUserDto);
+    await this.userRepository.save(user);
+    return user;
   }
 
   async remove(id: string) {

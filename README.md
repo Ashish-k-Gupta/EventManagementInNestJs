@@ -33,6 +33,10 @@ Still working on the user Service there are few problems in it.
 Can't let a user update password in the with the like rest of the user details, 
 Need to create seprate function to update password, where it asks for old password or there will another method for forget password.
 Also dto of min-max length is not working on create user, check why is that and fix that
-
+ 
 
 Then we still have the work pending from the 22nd june. 
+
+
+26th june, I don't know what I did today. But I had issue where I was not sending the password in the update request. But it was still un-hashing the password in the database. Which is solved now also there was this issue that even after not selecting the password in the update it was returning it in the response (as hashed password). This is also solved now using validation pipe in the main.ts file at global level that need to be fixed also.
+I'm too tired to work anymore. Going to sleep. 23:23

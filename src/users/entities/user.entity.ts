@@ -10,6 +10,7 @@ import * as bcrypt from "bcrypt";
 import { UserRoles } from "../../common/enums/userRole.enum";
 import { BaseEntity } from "../../common/entities/base.entity";
 import { Event } from "../../common/entities/event.entity";
+import { Exclude } from "class-transformer";
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,6 +31,7 @@ export class User extends BaseEntity {
     length: 100,
     select: false,
   })
+  @Exclude()
   password: string;
 
   @Column({
